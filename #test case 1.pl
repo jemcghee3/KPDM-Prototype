@@ -124,6 +124,8 @@ exclusion(PolicyID, Cause).
 % Rule 16: It is possible for two Deductibles of the same Slip to vary from each other.
 pd_deductible(PolicyID, Amount).
 bi_deductible(PolicyID, Days).
+% Something like the following could be a solution 
+% deductibles_vary(SlipId, DeductibleId1, DeductibleId2) :- slip(SlipId), deductible(DeductibleId1), deductible(DeductibleId2), DeductibleId1 \= DeductibleId2.
 
 % Rule 17: It is possible for two Limits of the same Slip to be distinct from each other.
 % limits_are_distinct(SlipId, LimitId1, LimitId2) :- slip(SlipId), limit(LimitId1), limit(LimitId2), LimitId1 \\= LimitId2.
@@ -181,3 +183,58 @@ bi_deductible_days(DeductibleId, Days) :- deductible(DeductibleId), deductible_t
 \
 % Rule 30: It is possible for the BI-Deductible to be first 15 days of the Loss.\
 bi_deductible_days(DeductibleId, 15).\
+\
+% Rule 31: It is possible for the BI-Deductible to be first 30 days of the Loss.
+bi_deductible_days(DeductibleId, 30).
+
+% Rule 33: It is possible for the BI-Deductible to be 15 times the average daily Loss.
+bi_deductible_amount(DeductibleId, DeductibleAmount) :- bi_deductible_days(DeductibleId, Days), Days is 15 * Average, average_daily_loss(Average).
+
+% Rule 34: It is obligatory for an Insured to pay a Deductible before the Insurer pays the Claim.
+% We should add a "deductible_pay_date" in the definition of a Deductible? And then say Deductible_pay_date > Claim_pay_date.
+
+% Rule 35: It is permitted for a Deductible to be a Per-Claim Deductible.
+deductible_type(DeductibleId, Per_Claim_Deductible).
+
+% Rule 36: It is forbidden for the Insurer to grant Coverage for any Claim lower than the Per-Claim Deductible.
+% Rule 37: It is obligatory for the Insurer to offer Coverage for any Claim higher than the Per-Claim Deductible.
+% This can be translated to: the Claim Coverage must be higher than the Per-Claim Deductible.
+claim_after_deductible(LossID, Net_Claim, bi) :- bi_deductible_amount(DeductibleId, Per_Claim_Deductible_Amount), Net_Claim > Per_Claim_Deductible_Amount. 
+
+% Rule 38: It is permitted for a Deductible to be an Aggregate Deductible.
+deductible_type(DeductibleId, Aggregate_Deductible).
+
+% Rule 39: It is obligatory for the Insurer to provide Coverage for a Claim if and only if the Deductible is Satisfied.
+coverage_claim(InsurerId, ClaimId) :- claim(ClaimId), deductible_satisfied(DeductibleId). % not sure about this one
+
+% Rule 40: A Per-Claim Deductible is Satisfied if the Claim is for a higher amount than the Per-Claim Deductible.
+% I believe Rules 36 and 37 already satisfy this condition. Or we can do something like:
+per_claim_deductible_deductible_satisied(DeductibleId) :- deductible_type(DeductibleId, Per_Claim_Deductible), 
+bi_deductible_amount(DeductibleId, Per_Claim_Deductible_Amount), 
+claim_after_deductible(LossID, Net_Claim, bi), 
+Net_Claim > Per_Claim_Deductible_Amount. 
+
+% Rule 41: An Aggregate Deductible is Satisfied if the sum of the amounts of all Claims on the Policy is for a higher amount than the Aggregate Deductible.
+% Not sure how to do a sum. Found this on StackOverflow:
+% list_sum_claims([],0).
+% list_sum_claims([Head|Tail], TotalSum) :- list_sum_claims(Tail, Sum1), TotalSum is Head+Sum1.
+aggregate_deductible_satisied(DeductibleId) :- Net_Claim_Sum(Net_Claim), bi_deductible_amount(DeductibleId, Aggregate_Deductible_Amount), Net_Claim_Sum > Aggregate_Deductible_Amount.
+
+% Rule 42: It is necessary for an Insured to file one or more Claims.
+file_claim(InsurerId, ClaimId) :- insurer(InsurerId), claim(ClaimId).
+
+% Rule 43: It is possible for a Claim to be covered by Coverage of one or more Policies.
+coverage_claim(ClaimId, PolicyId) :- claim(ClaimId), policy(PolicyId).
+
+% Rule 44: It is necessary for a Loss to present as an event.
+eventId(LossId).
+
+% Rule 45: It is obligatory for a Claim to be examined by one or more Experts.
+% Rule 46: It is obligatory that an Expert examines the Claim.
+examines_claim(ExpertId, ClaimId) :- expert(ExpertId), claim(ClaimId).
+
+% Rule 47: It is permitted for the Coverage to be limited by a Limit due to the Cause of Loss.  
+ 
+
+% Rule 48: It is permitted for the Slip to provide no Coverage for a Claim due to the Cause of Loss.  
+% Can we say that the net_claim has to be zero?
