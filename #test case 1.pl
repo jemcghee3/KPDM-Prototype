@@ -348,18 +348,16 @@ acme_share(LossID, Amount) :-
 % Final Rules
 no_dispute(LossID) :- 
     acme_share(LossID, Amount), 
-    Amount < 10000.
+    Amount < 10000,
+    Amount > 0.
     % If Acme's share is less than 10,000, there is no dispute.
 
 dispute(LossID) :-
     not(no_dispute(LossID)),
-    !,
-    coverage_limit(LossID, 0),
-    !. % It is mandatory that there is a dispute if the loss is not covered.
+    coverage_limit(LossID, 0). % It is mandatory that there is a dispute if the loss is not covered.
 
 dispute(LossID) :-
     not(no_dispute(LossID)),
-    !,
     acme_share(LossID, Amount),
     Amount > 1000000. % It is mandatory that there is a dispute if Acme's share greater than 1,000,000.
 
