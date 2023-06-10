@@ -10,6 +10,9 @@ estimate_bi_claim(01, 3000000).
 estimate_ee_claim(01, 25000000).
 business_interruption_duration(01, 18).
 covers_loss(10101, 01).
+examines_claim(sergio, 01). 
+examines_claim(charlene, 01).
+
 
 cause_of_loss(02, earthquake).
 repair_plan(02, none).
@@ -18,6 +21,9 @@ estimate_bi_claim(02, 3000000).
 estimate_ee_claim(02, 25000000).
 business_interruption_duration(02, 18).
 covers_loss(10101, 02).
+examines_claim(sarah, 02). 
+examines_claim(sergio, 02).
+
 
 cause_of_loss(03, war).
 repair_plan(03, none).
@@ -26,7 +32,27 @@ estimate_bi_claim(03, 3000000).
 estimate_ee_claim(03, 25000000).
 business_interruption_duration(03, 18).
 covers_loss(10101, 03).
+examines_claim(james, 03). 
+examines_claim(sergio, 03).
 
+
+cause_of_loss(04, fire).
+repair_plan(04, none).
+estimate_pd_claim(04, 1000000).
+estimate_bi_claim(04, 3000000).
+estimate_ee_claim(04, 0).
+business_interruption_duration(04, 1).
+covers_loss(10101, 04).
+examines_claim(sergio, 04).
+
+cause_of_loss(05, earthquake).
+repair_plan(05, none).
+estimate_pd_claim(05, 600000).
+estimate_bi_claim(05, 30000).
+estimate_ee_claim(05, 0).
+business_interruption_duration(05, 1).
+covers_loss(10101, 05).
+examines_claim(sergio, 05).
 
 % policy related facts
 applicable_policy(10101, 101).
@@ -46,7 +72,15 @@ acme_insures_share(101, 0.07).
 % difference_adverse_impact(101, 01, true). % this needs to be a rule
 other_policies_covering_loss(01, true).
 
-
+% expert related facts
+expert(sergio).
+expert(sarah).
+expert(james).
+expert(charlene).
+expert_type(sergio, adjuster).
+expert_type(sarah, accountant).
+expert_type(james, lawyer).
+expert_type(charlene, engineer).
 
 
 
@@ -132,6 +166,9 @@ bi_deductible(PolicyID, BI_Waiting_Period),
 business_interruption_duration(LossID, NumberOfMonths),
 Net_Claim is (NumberOfMonths - (BI_Waiting_Period / 30)) * EstimatedBIClaim.
 
+claim_after_deductible(LossID, Net_Claim, ee) :- covers_loss(PolicyID, LossID),
+provides_coverage(PolicyID, ee),
+estimate_ee_claim(LossID, Net_Claim).
 
 % Rule 14: It is possible for a Policy to exclude one or more Exclusions.
 exclusion(PolicyID, Cause) :- sublimit(PolicyID, Cause, 0).
@@ -186,7 +223,7 @@ provides_ee_coverage(PolicyId) :- provides_bi_coverage(PolicyId).
 % Rule 12 handles this?
 
 % Rule 26: It is necessary for each Slip to share a Share of the Policy.
-isShare(SlipID, PolicyID) :- share(SlipID, Percent), applicable_policy(PolicyID, SlipID).
+% isShare(SlipID, PolicyID) :- share(SlipID, Percent), applicable_policy(PolicyID, SlipID).
 % do we need to relate this directly to a slip? I do not think so, but this could be a useful shortcut
 
 % Rule 27: It is obligatory for the Deductible to be either a PD-Deductible or a BI-Deductible.
@@ -270,8 +307,10 @@ eventId(LossId).
 
 % Rule 45: It is obligatory for a Claim to be examined by one or more Experts.
 % Rule 46: It is obligatory that an Expert examines the Claim.
-% examines_claim(ExpertId, ClaimId) :- expert(ExpertId), claim(ClaimId).
+examines_claim(ExpertId, ClaimId). 
 % the above says if there is a claim and there is an expert, then the expert examines the claim. But the expert may examine a different claim.
+%examines_claim(james, 01).
+
 
 
 % Rule 47: It is permitted for the Coverage to be limited by a Limit due to the Cause of Loss.
@@ -280,16 +319,47 @@ coverage_limit(LossID, Sublimit) :- covers_loss(PolicyID, LossID),
 applicable_policy(PolicyID, SlipID),
 pd_bi_limit(PolicyID, Amount),
 cause_of_loss(LossID, Cause),
-sublimit(SlipID, Cause, Sublimit),
-nonvar(Sublimit),
-Sublimit < Amount.
+sublimit(SlipID, Cause, Sub),
+nonvar(Sub),
+Sub < Amount,
+Sublimit = Sub.
 
 coverage_limit(LossID, Amount) :- covers_loss(PolicyID, LossID),
 pd_bi_limit(PolicyID, Amount).
 
 
 
-
 % Rule 48: It is permitted for the Slip to provide no Coverage for a Claim due to the Cause of Loss.  
 % Can we say that the net_claim has to be zero?
 % Yes, I think so. Just limit the sublimit amount to zero. Then Rule 47 takes over.
+
+% This section calculates the amount of Acme's share of the claim, in a currency.
+acme_share(LossID, Amount) :- 
+    claim_after_deductible(LossID, PD_Net_Claim, pd),
+    claim_after_deductible(LossID, BI_Net_Claim, bi),
+    claim_after_deductible(LossID, EE_Net_Claim, ee),
+    covers_loss(PolicyID, LossID),
+    applicable_policy(PolicyID, SlipID),
+    acme_insures_share(SlipID, Share),
+    !, % This cut is needed to avoid an infinite loop
+    Amount = Share * (PD_Net_Claim + BI_Net_Claim + EE_Net_Claim).
+
+
+% Final Rules
+no_dispute(LossID) :- 
+    acme_share(LossID, Amount), 
+    Amount < 10000.
+    % If Acme's share is less than 10,000, there is no dispute.
+
+dispute(LossID) :-
+    not(no_dispute(LossID)),
+    !,
+    coverage_limit(LossID, 0),
+    !. % It is mandatory that there is a dispute if the loss is not covered.
+
+dispute(LossID) :-
+    not(no_dispute(LossID)),
+    !,
+    acme_share(LossID, Amount),
+    Amount > 1000000. % It is mandatory that there is a dispute if Acme's share greater than 1,000,000.
+
