@@ -22,7 +22,7 @@ business_interruption_duration(02, 24).
 covers_loss(10101, 02).
 examines_claim(sarah, 02). 
 examines_claim(sergio, 02).
-% should not be a dispute because the sublimit is 5 million and Acme's share is 7%, or 350,000, and no other factors are present
+% should not be a dispute because the sublimit is 5 million, or 4.5million after deductibe, and Acme's share is 7%, or 315,000, and no other factors are present
 
 cause_of_loss(03, war).
 repair_plan(03, none).
