@@ -5,36 +5,35 @@ slip(101).
 % loss related facts
 cause_of_loss(01, fire).
 repair_plan(01, none).
-estimate_pd_claim(01, 16000000).
+estimate_pd_claim(01, 15000000).
 estimate_bi_claim(01, 3000000).
-estimate_ee_claim(01, 25000000).
-business_interruption_duration(01, 18).
+estimate_ee_claim(01, 20000000).
+business_interruption_duration(01, 24).
 covers_loss(10101, 01).
 examines_claim(sergio, 01). 
-examines_claim(charlene, 01).
-
+% should be dispute due to size of the claim over 1 million Acme's share
 
 cause_of_loss(02, earthquake).
 repair_plan(02, none).
-estimate_pd_claim(02, 16000000).
+estimate_pd_claim(02, 15000000).
 estimate_bi_claim(02, 3000000).
-estimate_ee_claim(02, 25000000).
-business_interruption_duration(02, 18).
+estimate_ee_claim(02, 20000000).
+business_interruption_duration(02, 24).
 covers_loss(10101, 02).
 examines_claim(sarah, 02). 
 examines_claim(sergio, 02).
-
+% should not be a dispute because the sublimit is 5 million and Acme's share is 7%, or 350,000, and no other factors are present
 
 cause_of_loss(03, war).
 repair_plan(03, none).
-estimate_pd_claim(03, 16000000).
+estimate_pd_claim(03, 15000000).
 estimate_bi_claim(03, 3000000).
-estimate_ee_claim(03, 25000000).
-business_interruption_duration(03, 18).
+estimate_ee_claim(03, 20000000).
+business_interruption_duration(03, 24).
 covers_loss(10101, 03).
 examines_claim(james, 03). 
 examines_claim(sergio, 03).
-
+% should be a dispute because the sublimit is 0 (the cause is excluded), so by filing a claim, causation is in dispute
 
 cause_of_loss(04, fire).
 repair_plan(04, none).
@@ -44,15 +43,18 @@ estimate_ee_claim(04, 0).
 business_interruption_duration(04, 1).
 covers_loss(10101, 04).
 examines_claim(sergio, 04).
+% should not be a dispute because the claim is 500,000 net of deductible and Acme's share is 7%, or 35,000, and no other factors are present
 
-cause_of_loss(05, earthquake).
+cause_of_loss(05, unknown).
 repair_plan(05, none).
-estimate_pd_claim(05, 600000).
-estimate_bi_claim(05, 30000).
+estimate_pd_claim(05, 1000000).
+estimate_bi_claim(05, 3000000).
 estimate_ee_claim(05, 0).
 business_interruption_duration(05, 1).
 covers_loss(10101, 05).
 examines_claim(sergio, 05).
+examines_claim(charlene, 05).
+% should be in dispute because cause is unknown and the claim is 500,000 net of deductible and Acme's share is 7%, or 35,000. Charlene is an engineer and can determine the cause of the loss
 
 % policy related facts
 applicable_policy(10101, 101).
@@ -66,7 +68,7 @@ sublimit(10101, war, 0). % could also call this an exclusion
 
 % slip related facts
 sublimit(101, bi, 2000000). 
-sublimit(101, earthquake, 50000000).
+sublimit(101, earthquake, 5000000).
 acme_insures_share(101, 0.07).
 % acme_slip_differs(101, true). %this needs to be a rule
 % difference_adverse_impact(101, 01, true). % this needs to be a rule
