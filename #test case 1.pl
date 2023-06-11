@@ -1,16 +1,21 @@
 loss(01).
+loss(02).
+loss(03).
+loss(04).
+loss(05).
 policy(10101).
 slip(101).
 
 % loss related facts
-cause_of_loss(01, fire).
-repair_plan(01, none).
-estimate_pd_claim(01, 15000000).
-estimate_bi_claim(01, 3000000).
-estimate_ee_claim(01, 20000000).
-business_interruption_duration(01, 24).
-covers_loss(10101, 01).
-examines_claim(sergio, 01). 
+cause_of_loss(01, fire). % cause of the loss is fire, earthquake, war, unknown
+repair_plan(01, none). % repair plan is none or repair (will this be used?)
+estimate_pd_claim(01, 15000000). % estimate of the gross property damage claim
+estimate_bi_claim(01, 3000000). % estimate of the gross business interruption claim, per month
+estimate_ee_claim(01, 20000000). % estimate of the gross extra expense claim
+business_interruption_duration(01, 24). % duration of the business interruption in months
+covers_loss(10101, 01). % policy 10101 covers loss 01
+examines_claim(sergio, 01). % sergio examines the claim
+other_policies_covering_loss(01, true). % this is not used, but should lead to a dispute if it changes Acme's amount by more than 100,000
 % should be dispute due to size of the claim over 1 million Acme's share
 
 cause_of_loss(02, earthquake).
@@ -57,29 +62,28 @@ examines_claim(charlene, 05).
 % should be in dispute because cause is unknown and the claim is 500,000 net of deductible and Acme's share is 7%, or 35,000. Charlene is an engineer and can determine the cause of the loss
 
 % policy related facts
-applicable_policy(10101, 101).
+applicable_policy(10101, 101). % policy 10101 is applicable to slip 101
 
-policy_type(10101, iar).
-pd_deductible(10101, 500000).
-bi_deductible(10101, 30).
-pd_bi_limit(10101, 250000000).
-ee_limit(10101, 25000000).
-sublimit(10101, war, 0). % could also call this an exclusion
+policy_type(10101, iar). % policy 10101 is an industrial all risk policy
+pd_deductible(10101, 500000). % policy 10101 has a property damage deductible of 500,000
+bi_deductible(10101, 30). % policy 10101 has a business interruption deductible of 30 days
+pd_bi_limit(10101, 250000000). % policy 10101 has a property damage and business interruption limit of 250,000,000
+ee_limit(10101, 25000000). % policy 10101 has an extra expense limit of 25,000,000
+sublimit(10101, war, 0). % policy 10101 has a sublimit for war of 0 (that is, a loss is not covered if it is caused by war)
 
 % slip related facts
-sublimit(101, bi, 2000000). 
-sublimit(101, earthquake, 5000000).
-acme_insures_share(101, 0.07).
-% acme_slip_differs(101, true). %this needs to be a rule
-% difference_adverse_impact(101, 01, true). % this needs to be a rule
-other_policies_covering_loss(01, true).
+sublimit(101, bi, 2000000). % slip 101 has a sublimit for business interruption of 2,000,000 (per month)
+sublimit(101, earthquake, 5000000). % slip 101 has a sublimit of 5,000,000 if the cause of the loss is earthquake
+acme_insures_share(101, 0.07). % Acme insures 7% of the risk under slip 101
+% acme_slip_differs(101, true). %this needs to be a rule or removed
+% difference_adverse_impact(101, 01, true). % this needs to be a rule or removed
 
 % expert related facts
-expert(sergio).
+expert(sergio). % sergio is an expert
 expert(sarah).
 expert(james).
 expert(charlene).
-expert_type(sergio, adjuster).
+expert_type(sergio, adjuster). % sergio is an adjuster
 expert_type(sarah, accountant).
 expert_type(james, lawyer).
 expert_type(charlene, engineer).
@@ -88,33 +92,24 @@ expert_type(charlene, engineer).
 
 
 % Rule 1: It is necessary that an Insured purchases one or more Policies.
-applicable_policy(PolicyID, SlipID). % important is to relate the insured to the policy, but I think better is to relate the loss to the policy.
+% This Rule is not formalized because it is not necessary. We did not consider the case where an insured does not purchase a policy.
 
 % Rule 1.1: It is necessary for a Loss to relate to a Policy.
 covers_loss(PolicyID, LossID). % I think this is a fact, not a rule
 
 % Rule 2: It is necessary that a Policy insure one or more Insured.
-% maybe remove this rule? It is formalized in Rule 1, isnt it? We can simplify the one or more insureds since this has to do with subsidiary companies or subcontractors and not core for the project
+% This Rule is not formalized because it is not necessary. We did not consider the case where a policy does not insure an insured.
 
 % Rule 3: It is possible that a Policy is an aggregate one or more Slips.
-% aggregate_policy(PolicyID, SlipID).
-% Rule 1 already covers this
-
+applicable_policy(PolicyID, SlipID). % A policy is applicable to a slip, so it is an aggregate policy
 
 % Rule 4: It is necessary that Slip is written by one Insurer.
-% writes_slip(InsurerID, SlipID). % need to connect insurer and slip
-% Rule 1 sufficient
-
-% Rule 4.1: It is necessary that an Insurer that writes a slip on a policy insure the Insured.
-% insure(InsurerID, PolicyID, InsuredID) :- writes_slip(InsurerID, SlipID), aggregate_policy(PolicyID, SlipID), applicable_policy(InsuredID, PolicyID).
-% I dont think it matters? Too much informtion about non-Acme insurers
-% could write a rule to translate a slip->policy relationship into a slip-> insured or -> loss, but necessary?
+% This Rule is not formalized because it is not necessary. We considered the slip, the contract document, to be providing the insurance, not the insurer.
 
 % Rule 5: It is necessary that an Insurer writes a Slip.
-% insurer_writes_slip(SlipId, InsurerId) :- slip(SlipId), insurer(InsurerId).
-% saying the referse of Rule 4
+% This Rule is not formalized because it is not necessary. We considered the slip, the contract document, to be providing the insurance, not the insurer.
 
-% Rule 6: It is possible for a Slip to contain one or more Endorsements.
+% Rule 6: It is possible for a Slip to contain one or more different sublimits from the policy.
 % slip_contains_endorsements(SlipId, EndorsementIds) :- slip(SlipId), findall(EndorsementId, endorsement(EndorsementId), EndorsementIds).
 % We dont actually use endorsements outside of this rule. Maybe say that the slip can be different from the policy.
 
