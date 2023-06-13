@@ -3,6 +3,7 @@ loss(02).
 loss(03).
 loss(04).
 loss(05).
+loss(06).
 policy(10101).
 slip(101).
 
@@ -87,7 +88,7 @@ sublimit(10101, war, 0). % policy 10101 has a sublimit for war of 0 (that is, a 
 
 
 % slip related facts
-slip_sublimit(101, bi, 2000000). % slip 101 has a sublimit for business interruption of 2,000,000 (per month)
+% slip_sublimit(101, bi, 2000000). % slip 101 has a sublimit for business interruption of 2,000,000 (per month)
 slip_sublimit(101, earthquake, 5000000). % slip 101 has a sublimit of 5,000,000 if the cause of the loss is earthquake
 acme_insures_share(101, 0.07). % Acme insures 7% of the risk under slip 101
 % acme_slip_differs(101, true). %this needs to be a rule or removed
@@ -144,31 +145,61 @@ claim_after_deductible(LossID, Net_Claim, pd) :-
     provides_coverage(PolicyID, pd), % check for coverage
     estimate_pd_claim(LossID, EstimatedPDClaim), % find the estimated claim
     pd_deductible(PolicyId, PDDeductible), % find the deductible
-    Net_Claim is EstimatedPDClaim - PDDeductible, % calculate the net claim
-    coverage_limit(LossID, Sublimit), % find the sublimit
-    Net_Claim =< Sublimit. % check if the claim is within the sublimit
+    Net_Claim is EstimatedPDClaim - PDDeductible. % calculate the net claim
+%    coverage_limit(LossID, Sublimit), % find the sublimit
+%    Net_Claim =< Sublimit. % check if the claim is within the sublimit
 
-claim_after_deductible(LossID, Sublimit, pd) :- % if the claim is greater than the sublimit, the claim is limited to the sublimit
-    deductible_satisfied(LossID, pd), % check if deductible is satisfied. Necessary to avoid errors when calculating the net claim
-    covers_loss(PolicyID, LossID), % find the relevant policy
-    provides_coverage(PolicyID, pd), % check for coverage
-    estimate_pd_claim(LossID, EstimatedPDClaim), % find the estimated claim
-    pd_deductible(PolicyId, PDDeductible), % find the deductible
-    Net_Claim is EstimatedPDClaim - PDDeductible, % calculate the net claim
-    coverage_limit(LossID, Sublimit), % find the sublimit
-    Net_Claim > Sublimit. % check if the claim is within the sublimit
-    
-claim_after_deductible(LossID, Net_Claim, bi) :- 
+%claim_after_deductible(LossID, Sublimit, pd) :- % if the claim is greater than the sublimit, the claim is limited to the sublimit
+%    deductible_satisfied(LossID, pd), % check if deductible is satisfied. Necessary to avoid errors when calculating the net claim
+%    covers_loss(PolicyID, LossID), % find the relevant policy
+%    provides_coverage(PolicyID, pd), % check for coverage
+%    estimate_pd_claim(LossID, EstimatedPDClaim), % find the estimated claim
+%    pd_deductible(PolicyId, PDDeductible), % find the deductible
+%    Net_Claim = EstimatedPDClaim - PDDeductible, % calculate the net claim
+%    coverage_limit(LossID, Sublimit), % find the sublimit
+%    Net_Claim > Sublimit. % check if the claim is within the sublimit
+
+claim_after_deductible(LossID, 0, pd) :-
+    not(deductible_satisfied(LossID, pd)). % check if deductible is satisfied
+    % Return 0 if the deductible is not satisfied
+
+%claim_after_deductible(LossID, Net_Claim, bi) :- 
+%    deductible_satisfied(LossID, bi), % check if deductible is satisfied. Necessary to avoid errors when calculating the net claim
+%    covers_loss(PolicyID, LossID), % find the relevant policy
+%    provides_coverage(PolicyID, bi), % check for coverage
+%    estimate_bi_claim(LossID, EstimatedBIClaim), % find the estimated claim, which will be expressed on a monthly basis
+%    bi_deductible(PolicyID, BI_Waiting_Period), % find the deductible
+%    business_interruption_duration(LossID, NumberOfMonths), % find the number of months of business interruption
+%    slip_sublimit(SlipID, bi, BI_Sublimit),
+%    nonvar(BI_Sublimit), % check if the sublimit is not a variable
+%    BI_Sublimit > EstimatedBIClaim, % check if the sublimit is greater than the estimated claim
+%    Net_Claim is (NumberOfMonths - (BI_Waiting_Period / 30)) * EstimatedBIClaim. % calculate the net claim
+
+%claim_after_deductible(LossID, Net_Claim, bi) :- % for cases where the bi sublimit is less than the estimated claim
+%    deductible_satisfied(LossID, bi), % check if deductible is satisfied. Necessary to avoid errors when calculating the net claim
+%    covers_loss(PolicyID, LossID), % find the relevant policy
+%    provides_coverage(PolicyID, bi), % check for coverage
+%    estimate_bi_claim(LossID, EstimatedBIClaim), % find the estimated claim, which will be expressed on a monthly basis
+%    bi_deductible(PolicyID, BI_Waiting_Period), % find the deductible
+%    business_interruption_duration(LossID, NumberOfMonths), % find the number of months of business interruption
+%    slip_sublimit(SlipID, bi, BI_Sublimit),
+%    nonvar(BI_Sublimit), % check if the sublimit is not a variable
+%    BI_Sublimit < EstimatedBIClaim, % check if the sublimit is less than the estimated claim
+%    Net_Claim is (NumberOfMonths - (BI_Waiting_Period / 30)) * BI_Sublimit. % calculate the net claim
+
+claim_after_deductible(LossID, Net_Claim, bi) :- % for cases where there is no bi sublimit
     deductible_satisfied(LossID, bi), % check if deductible is satisfied. Necessary to avoid errors when calculating the net claim
     covers_loss(PolicyID, LossID), % find the relevant policy
     provides_coverage(PolicyID, bi), % check for coverage
     estimate_bi_claim(LossID, EstimatedBIClaim), % find the estimated claim, which will be expressed on a monthly basis
     bi_deductible(PolicyID, BI_Waiting_Period), % find the deductible
     business_interruption_duration(LossID, NumberOfMonths), % find the number of months of business interruption
-
-% This still needs to check if there is a bi slip_sublimit that is less than the EstimatedBIClaim
-
+    not(slip_sublimit(SlipID, bi, BI_Sublimit)), % when there is no sublimit
     Net_Claim is (NumberOfMonths - (BI_Waiting_Period / 30)) * EstimatedBIClaim. % calculate the net claim
+    
+claim_after_deductible(LossID, 0, bi) :-
+    not(deductible_satisfied(LossID, bi)). % check if deductible is satisfied
+    % Return 0 if the deductible is not satisfied
 
 claim_after_deductible(LossID, Net_Claim, ee) :- 
     covers_loss(PolicyID, LossID), % find the relevant policy
@@ -225,15 +256,13 @@ provided_coverage(PolicyID, bi) :- provides_coverage(PolicyID, ee). % if coverag
 % Since we are only concerned with Acme, we represent their share as a fact pulled from Acme's records.
 
 % The following rule calculates the share of the claim that Acme must pay.
-acme_share(LossID, Amount) :-
-    claim_after_deductible(LossID, PD_Net_Claim, pd),
-    claim_after_deductible(LossID, BI_Net_Claim, bi),
-    claim_after_deductible(LossID, EE_Net_Claim, ee),
+acme_share(LossID, Share_Amount) :-
     covers_loss(PolicyID, LossID),
     applicable_policy(PolicyID, SlipID),
     acme_insures_share(SlipID, Share),
     !, % This cut is needed to avoid an infinite loop
-    Amount = Share * (PD_Net_Claim + BI_Net_Claim + EE_Net_Claim).
+    total_net_claim(LossID, Total_Amount),
+    Share_Amount = Share * Total_Amount.
 
 % Rule 27: It is obligatory for the Deductible to be either a PD-Deductible or a BI-Deductible.
 % This is represented as a fact of the policy.
@@ -270,19 +299,33 @@ deductible_satisfied(LossID, bi) :- covers_loss(PolicyID, LossID), % find the re
 % This is represented as a fact of the loss.
 
 % Rule 47: It is permitted for the Coverage to be limited by a Limit due to the Cause of Loss.
-coverage_limit(LossID, Sublimit) :- 
+coverage_limit(LossID, Limit) :- 
     covers_loss(PolicyID, LossID), % find the relevant policy
     applicable_policy(PolicyID, SlipID), % find the relevant slip
     pd_bi_limit(PolicyID, Amount), % find the limit of the policy
     cause_of_loss(LossID, Cause), % find the cause of the loss
     slip_sublimit(SlipID, Cause, Sub), % find the sublimit of the slip
     nonvar(Sub), % check to see if the sublimit has been found
-    Sub < Amount, % check to see if the sublimit is less than the limit
-    Sublimit = Sub. % return the sublimit
+    !, % to avoid backtracking when there is a sublimit
+    min(Amount, Sub, Limit). % return the lower of the two limits
 
 coverage_limit(LossID, Amount) :- covers_loss(PolicyID, LossID),
-pd_bi_limit(PolicyID, Amount).
+    pd_bi_limit(PolicyID, PD_BI_Limit),
+    ee_limit(PolicyID, EE_Limit),
+    Amount = PD_BI_Limit + EE_Limit.
 % This is the default case, where there is no sublimit.
+
+total_net_claim(LossID, Amount) :-
+    coverage_limit(LossID, Sublimit),
+    claim_after_deductible(LossID, PD_Net_Claim, pd),
+    claim_after_deductible(LossID, BI_Net_Claim, bi),
+    claim_after_deductible(LossID, EE_Net_Claim, ee),
+    Sum = PD_Net_Claim + BI_Net_Claim + EE_Net_Claim,
+    min(Sum, Sublimit, Amount).
+
+min(A, B, A) :- A < B.
+min(A, B, B) :- A >= B.
+
 
 % Rule 48: It is permitted for the Slip to provide no Coverage for a Claim due to the Cause of Loss.  
 % Rule 47 already covers this use case, as the slip_sublimit/3 could have a value of 0.
@@ -295,20 +338,6 @@ no_dispute(LossID) :-
     Amount > 0.
     % If Acme's share is less than 10,000 (but the claim is not excluded), there is no dispute, even if other triggers exist.
 
-%no_dispute(LossID) :-
-%    acme_share(LossID, Amount),
-%    coverage_limit(LossID, Sublimit),
-%    Amount < Sublimit.
-    % Acme will refund the loss if the share/coverage is less than the limit. (case 02)
-	% this rule conflicts with Case 01 because limit is 250'000'000
-
-
-% no_dispute(LossID) :- not(cause_of_loss(LossID, unknown)). 
-% There should be a dispute if the cause is unknown.
-% this doesn't work for some strange reason.
-% we cannot write: dispute(LossID) :- cause_of_loss(LossID, unknown). 
-% because it will check for the other two statements below and return true and false at the same time.
-
 dispute(LossID) :-
     not(no_dispute(LossID)),
     coverage_limit(LossID, 0). % It is mandatory that there is a dispute if the loss is not covered.
@@ -320,6 +349,6 @@ dispute(LossID) :-
 
 dispute(LossID) :-
     not(no_dispute(LossID)),
+    cause_of_loss(LossID, unknown),
     acme_share(LossID, Amount),
-    Amount >= 100000,
-    cause_of_loss(LossID, unknown). % It is mandatory that there is a dispute if Acme's share greater than 100,000 and the cause is unknown.
+    Amount >= 100000. % It is mandatory that there is a dispute if Acme's share greater than 100,000 and the cause is unknown.
