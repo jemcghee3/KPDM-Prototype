@@ -146,46 +146,10 @@ claim_after_deductible(LossID, Net_Claim, pd) :-
     estimate_pd_claim(LossID, EstimatedPDClaim), % find the estimated claim
     pd_deductible(PolicyId, PDDeductible), % find the deductible
     Net_Claim is EstimatedPDClaim - PDDeductible. % calculate the net claim
-%    coverage_limit(LossID, Sublimit), % find the sublimit
-%    Net_Claim =< Sublimit. % check if the claim is within the sublimit
-
-%claim_after_deductible(LossID, Sublimit, pd) :- % if the claim is greater than the sublimit, the claim is limited to the sublimit
-%    deductible_satisfied(LossID, pd), % check if deductible is satisfied. Necessary to avoid errors when calculating the net claim
-%    covers_loss(PolicyID, LossID), % find the relevant policy
-%    provides_coverage(PolicyID, pd), % check for coverage
-%    estimate_pd_claim(LossID, EstimatedPDClaim), % find the estimated claim
-%    pd_deductible(PolicyId, PDDeductible), % find the deductible
-%    Net_Claim = EstimatedPDClaim - PDDeductible, % calculate the net claim
-%    coverage_limit(LossID, Sublimit), % find the sublimit
-%    Net_Claim > Sublimit. % check if the claim is within the sublimit
 
 claim_after_deductible(LossID, 0, pd) :-
     not(deductible_satisfied(LossID, pd)). % check if deductible is satisfied
     % Return 0 if the deductible is not satisfied
-
-%claim_after_deductible(LossID, Net_Claim, bi) :- 
-%    deductible_satisfied(LossID, bi), % check if deductible is satisfied. Necessary to avoid errors when calculating the net claim
-%    covers_loss(PolicyID, LossID), % find the relevant policy
-%    provides_coverage(PolicyID, bi), % check for coverage
-%    estimate_bi_claim(LossID, EstimatedBIClaim), % find the estimated claim, which will be expressed on a monthly basis
-%    bi_deductible(PolicyID, BI_Waiting_Period), % find the deductible
-%    business_interruption_duration(LossID, NumberOfMonths), % find the number of months of business interruption
-%    slip_sublimit(SlipID, bi, BI_Sublimit),
-%    nonvar(BI_Sublimit), % check if the sublimit is not a variable
-%    BI_Sublimit > EstimatedBIClaim, % check if the sublimit is greater than the estimated claim
-%    Net_Claim is (NumberOfMonths - (BI_Waiting_Period / 30)) * EstimatedBIClaim. % calculate the net claim
-
-%claim_after_deductible(LossID, Net_Claim, bi) :- % for cases where the bi sublimit is less than the estimated claim
-%    deductible_satisfied(LossID, bi), % check if deductible is satisfied. Necessary to avoid errors when calculating the net claim
-%    covers_loss(PolicyID, LossID), % find the relevant policy
-%    provides_coverage(PolicyID, bi), % check for coverage
-%    estimate_bi_claim(LossID, EstimatedBIClaim), % find the estimated claim, which will be expressed on a monthly basis
-%    bi_deductible(PolicyID, BI_Waiting_Period), % find the deductible
-%    business_interruption_duration(LossID, NumberOfMonths), % find the number of months of business interruption
-%    slip_sublimit(SlipID, bi, BI_Sublimit),
-%    nonvar(BI_Sublimit), % check if the sublimit is not a variable
-%    BI_Sublimit < EstimatedBIClaim, % check if the sublimit is less than the estimated claim
-%    Net_Claim is (NumberOfMonths - (BI_Waiting_Period / 30)) * BI_Sublimit. % calculate the net claim
 
 claim_after_deductible(LossID, Net_Claim, bi) :- % for cases where there is no bi sublimit
     deductible_satisfied(LossID, bi), % check if deductible is satisfied. Necessary to avoid errors when calculating the net claim
