@@ -284,7 +284,9 @@ total_net_claim(LossID, Amount) :-
     claim_after_deductible(LossID, PD_Net_Claim, pd),
     claim_after_deductible(LossID, BI_Net_Claim, bi),
     claim_after_deductible(LossID, EE_Net_Claim, ee),
-    Sum = PD_Net_Claim + BI_Net_Claim + EE_Net_Claim,
+    pd_bi_limit(PolicyID, PD_BI_Limit),
+    ee_limit(PolicyID, EE_Limit),
+    Sum = min(PD_BI_Limit, (PD_Net_Claim + BI_Net_Claim)) + min(EE_Limit, EE_Net_Claim),
     min(Sum, Sublimit, Amount).
 
 min(A, B, A) :- A < B.
