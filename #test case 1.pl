@@ -319,29 +319,90 @@ total_net_claim(LossID, Amount) :-
 min(A, B, A) :- A < B.
 min(A, B, B) :- A >= B.
 
-
 % Rule 48: It is permitted for the Slip to provide no Coverage for a Claim due to the Cause of Loss.  
 % Rule 47 already covers this use case, as the slip_sublimit/3 could have a value of 0.
 
+% Rule 49: It is permitted for the Insurer to employ one or more Experts. 
+% Rule 50: It is permitted for the Insurer to hire an Expert employed by one or more other Insurers. 
+% Rule 51: It is possible for the Expert to be an Adjuster, an Accountant, an Engineer, or Coverage Counsel. 
+% Rules related to experts are represented as facts of the loss.
+
+
+
+% 52: It is possible for a Claim to be Technically Complex.
+
+
+
+% 53: It is necessary that a CAR Policy is less likely to be Technically Complex than an IAR Policy.
+% This would be its own knowledge intensive process, and is not represented in the knowledge base.
+
+
+
+% Rule 54: It is obligatory that a Claim is Technically Complex if the Insured will not repair or replace the Loss.
+% Rule 55: It is obligatory that the claim is Technically Complex if the Cause of the Loss is Unknown.
+% Rule 56: It is possible for an EE Claim to be Uncertain.
+% Rule 57: It is possible for a BI Claim to be Uncertain.
+% Rule 58: It is possible for the EE Claim to be Uncertain if the BI Claim is Uncertain. 
+% Rule 59: It is necessary that the Location of a Loss affects whether a Claim is Uncertain.
+% Rule 60: It is obligatory that the Claim is Uncertain if the Location is Political.
+% Rule 61: It is obligatory for the EE Claim to last for the duration of the BI Claim if the Claim is Consequential. 
+
+
+
+% Rule 62: It is obligatory for an Adjuster to examine a PD Claim.
+% Rule 63: It is obligatory for an Accountant to inspect a Claim if the Claim is Uncertain.
+% Rule 64: It is obligatory for an Engineer to review the Cause of the Loss if the Cause of the Loss is Unknown.
+% Rule 65: It is obligatory for an Engineer to verify a PD Claim if it is Technically Complex.
+% Rule 66: It is obligatory for Coverage Counsel to investigate the Coverage if there is more than one Policy.
+% Rule 67: It is obligatory for Coverage Counsel to assess the Coverage if Cause is subject to one or more Limits or Exclusions.
+% Rules 62-67 were not formalized because the decision to hire an expert would be the output of another knowledge intensive process.
+
+
+
+% Rule 68: It is possible for a Dispute to exist if a Claim is Technically Complex. 
+% Rule 69: It is obligatory for a Dispute to exist if a Claim is Uncertain.
+
+
+
+% Rule 70: It is possible for a Dispute to exist if Coverage Counsel is employed. 
+% Rule 70 is not formalized because the decision to hire an expert would be the output of another knowledge intensive process. 
+% Rule 71: It is obligatory for a Dispute to exist if Insurers in the same Market employ two of the same type of Expert for a Claim
+% Rule 71 is not formalized because it would require knowledge of policies other than those to which Acme is a party.
+
+
+
+% Rule 72: It is obligatory for a Dispute to exist if two Policies provide Coverage for the same Loss.
+% Rule 73: It is possible for a Dispute to exist if the Claim is greater than the Limit for the Coverage of Acme’s Slip but less than the Limit of the Policy.
+
+
+
+% Rule 74: It is possible for a Dispute to exist if the Claim is less than the Deductible for the Coverage of Acme’s Slip but greater than the Deductible of the Policy.
+% Slips can have deductibles different from the policy. This was not formalized but could be an extension of the knowledge base.
+
 
 % Final Rules to Determine Dispute
-no_dispute(LossID) :- 
-    acme_share(LossID, Amount), 
-    Amount < 10000,
-    Amount > 0.
-    % If Acme's share is less than 10,000 (but the claim is not excluded), there is no dispute, even if other triggers exist.
 
+% Rule 75: It is obligatory for a Dispute to exist if the Cause of the Loss is Excluded.
 dispute(LossID) :-
     not(no_dispute(LossID)),
     coverage_limit(LossID, 0). % It is mandatory that there is a dispute if the loss is not covered.
 
+% Rule 76: It is obligatory for a Dispute to exist if Acme’s Share of the Claim is for greater than 1,000,000 CHF
 dispute(LossID) :-
     not(no_dispute(LossID)),
     acme_share(LossID, Amount),
     Amount > 1000000. % It is mandatory that there is a dispute if Acme's share greater than 1,000,000.
 
+% Rule 77 It is possible for a Dispute to exist if Acme’s Share of the Claim is for greater than 100,000 CHF.
 dispute(LossID) :-
     not(no_dispute(LossID)),
     cause_of_loss(LossID, unknown),
     acme_share(LossID, Amount),
     Amount >= 100000. % It is mandatory that there is a dispute if Acme's share greater than 100,000 and the cause is unknown.
+
+% Rule 78: It is forbidden for a Dispute to exist if Acme’s Share of the Claim is less than 10,000 CHF
+no_dispute(LossID) :- 
+    acme_share(LossID, Amount), 
+    Amount < 10000,
+    Amount > 0.
+    % If Acme's share is less than 10,000 (but the claim is not excluded), there is no dispute, even if other triggers exist.
