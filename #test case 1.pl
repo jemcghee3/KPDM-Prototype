@@ -110,7 +110,7 @@ expert_type(charlene, engineer).
 % Rule 1: It is necessary that an Insured purchases one or more Policies.
 % This Rule is not formalized because it is not necessary. We did not consider the case where an insured does not purchase a policy.
 
-% Rule 1.1: It is necessary for a Loss to relate to a Policy.
+% Rule 1.1: It is necessary for a Loss to covered by a Policy.
 % This is represented as a fact of the form covers_loss(PolicyID, LossID).
 
 % Rule 2: It is necessary that a Policy insure one or more Insured.
@@ -128,17 +128,17 @@ expert_type(charlene, engineer).
 % Rule 6: It is possible for a Slip to contain one or more different sublimits from the policy.
 % This is represented as a fact of the slip.
 
-% Rule 11: It is necessary for a Policy to provide one or more Coverages.
+% Rule 10: It is necessary for a Policy to provide one or more Coverages.
 provides_coverage(PolicyID, pd). % always true
 % Other coverages can be provider for by the policy.
 provides_coverage(PolicyID, ee) :- ee_limit(PolicyID, EELimit).
 provides_coverage(PolicyID, bi) :- ee_limit(PolicyID, EELimit). % if coverage for EE, coverage for BI
 
-% Rule 12: It is obligatory that a Coverage be limited by one or more Limits.
+% Rule 11: It is obligatory that a Coverage be limited by one or more Limits.
 % This is represented as a fact of the policy.
 % pd_bi_limit/2, ee_limit/2, sublimit/3
 
-% Rule 13: It is necessary for a Coverage to pay after one or more Deductibles.
+% Rule 12: It is necessary for a Coverage to pay after one or more Deductibles.
 claim_after_deductible(LossID, Net_Claim, pd) :-
     deductible_satisfied(LossID, pd), % check if deductible is satisfied. Necessary to avoid errors when calculating the net claim
     covers_loss(PolicyID, LossID), % find the relevant policy
@@ -170,55 +170,56 @@ claim_after_deductible(LossID, Net_Claim, ee) :-
     provides_coverage(PolicyID, ee), % check for coverage
     estimate_ee_claim(LossID, Net_Claim). % find the estimated claim. No deductible is applied.
 
-% Rule 14: It is possible for a Policy to exclude one or more Exclusions.
+% Rule 13: It is possible for a Policy to exclude one or more Exclusions.
 % Exclusions are formalized as sublimits of zero.
 
-% Rule 15: It is possible for two Exclusions of the same Slip to be different from each other.
+% Rule 14: It is possible for two Exclusions of the same Slip to be different from each other.
 % See Rule 14 and Rule 17.
 
-% Rule 16: It is possible for two Deductibles of the same Slip to vary from each other.
+% Rule 15: It is possible for two Deductibles of the same Slip to vary from each other.
 % This is expressed as a fact of the policy.
 
-% Rule 17: It is possible for two Limits of the same Slip to be distinct from each other.
+% Rule 16: It is possible for two Limits of the same Slip to be distinct from each other.
 % A slip may have a slip_sublimit, expressed as a fact of the slip.
 
-% Rule 17.1: It is necessary for a Slip to have the sublimit of the Policy if the Slip does not have a sublimit and the Policy does.
+% Rule 16.1: It is necessary for a Slip to have the sublimit of the Policy if the Slip does not have a Limit and the Policy does.
 slip_sublimit(SlipID, Cause, Amount) :- 
     applicable_policy(PolicyID, SlipID), 
     sublimit(PolicyID, Cause, Amount).
 % The slip follows the policy where there are no differences.
 
-% Rule 18: It is possible for a Policy to be of type CAR.
+% Rule 17: It is possible for a Policy to be of type CAR.
 % This is represented as a fact of the policy.
 
-% Rule 19: It is possible for a Policy to be of type IAR.
+% Rule 18: It is possible for a Policy to be of type IAR.
 % This is represented as a fact of the policy.
 
-% Rule 20: It is forbidden for a Policy to appear of type CAR and IAR at the same time.
+% Rule 19: It is forbidden for a Policy to appear of type CAR and IAR at the same time.
 policy_type(PolicyID, iar) :- \+ policy_type(PolicyID, car).
 policy_type(PolicyID, car) :- \+ policy_type(PolicyID, iar).
 % This distinction is ultimately not used. It would be relevant for an extension of the system to include a distinction between CAR and IAR policies.
 % This defaults to IAR if neither is specified.
 
-% Rule 21: It is necessary for a Slip to provide Coverage for Property Damage (PD).
+% Rule 20: It is necessary for a Slip to provide Coverage for Property Damage (PD).
 provides_coverage(SlipID, pd). % always true
 
-% Rule 22: It is possible for a Slip to provide Coverage for Business Interruption (BI).
+% Rule 21: It is possible for a Slip to provide Coverage for Business Interruption (BI).
 provides_coverage(SlipID, bi) :- applicable_policy(PolicyID, SlipID), provides_coverage(PolicyID, bi).
 
-% Rule 23: It is possible for a Slip to provide Coverage for Extra Expenses (EE).
+% Rule 22: It is possible for a Slip to provide Coverage for Extra Expenses (EE).
 provides_coverage(SlipID, ee) :- applicable_policy(PolicyID, SlipID), provides_coverage(PolicyID, ee).
 
-% Rule 24: If and only if a Policy provides Coverage for BI, it is obligatory that the Policy provides Coverage for EE.
+% Rule 23: If and only if a Policy provides Coverage for BI, it is obligatory that the Policy provides Coverage for EE.
 provides_coverage(PolicyID, ee) :- provides_coverage(PolicyID, bi). % if coverage for BI, coverage for EE
 provided_coverage(PolicyID, bi) :- provides_coverage(PolicyID, ee). % if coverage for EE, coverage for BI
 
-% Rule 25: It is permitted for a Policy to be of any type to give Coverage for BI.
-% This is represented as a fact of the policy.
+% Rule 24: It is permitted for a Policy to be of any type to give Coverage for BI.
+% This is represented as a fact of the policy, which Prolog recognizes if there is an EE limit.
 
-% Rule 26: It is necessary for each Slip to share a Share of the Policy.
+% Rule 25: It is necessary for each Slip to share a Share of the Policy.
 % Since we are only concerned with Acme, we represent their share as a fact pulled from Acme's records.
 
+% Rule 26: It is obligatory for Acme to pay its Share of the Loss.
 % The following rule calculates the share of the claim that Acme must pay.
 acme_share(LossID, Share_Amount) :-
     covers_loss(PolicyID, LossID),
@@ -237,7 +238,13 @@ acme_share(LossID, Share_Amount) :-
 % Rule 29: It is obligatory for BI-Deductible to be expressed in number of days.
 % This is represented as a fact of the deductible as part of the policy.
 
-% Rule 34: It is obligatory for an Insured to pay a Deductible before the Insurer pays the Claim.
+% Rule 30: It is possible for the BI-Deductible to be first 15 days of the Loss. 
+% Rule 31: It is possible for the BI-Deductible to be first 30 days of the Loss. 
+% Rule 32: It is possible for the BI-Deductible to be 15 times the average daily Loss.
+% These rules were removed as they would be expressed as facts of the policy. 
+% Rule 32 could have been implimented as a rule, but it was not necessary for the scope of this project.
+
+% Rule 33: It is obligatory for an Insured to pay a Deductible before the Insurer pays the Claim.
 deductible_satisfied(LossID, pd) :- covers_loss(PolicyID, LossID), % find the relevant policy
     estimate_pd_claim(LossID, Amount), % find the estimated claim
     pd_deductible(PolicyID, Deductible), % find the deductible
@@ -248,12 +255,32 @@ deductible_satisfied(LossID, bi) :- covers_loss(PolicyID, LossID), % find the re
     bi_deductible(PolicyID, BI_Waiting_Period), % find the deductible
     NumberOfMonths > BI_Waiting_Period / 30. % check if the number of months is higher than the deductible
 
-% Rule 39: It is obligatory for the Insurer to provide Coverage for a Claim if and only if the Deductible is Satisfied.
+% Rule 34: It is permitted for a Deductible to be a Per-Claim Deductible. 
+% Rule 35: It is forbidden for the Insurer to grant Coverage for any Claim lower than the Per-Claim Deductible. 
+% Rule 36: It is obligatory for the Insurer to offer Coverage for any Claim higher than the Per-Claim Deductible. 
+% Rule 37: It is permitted for a Deductible to happen to be an Aggregate Deductible. 
+% These rules relate to the difference between aggregate deductible and per-claim deductible.
+% They were not implimented here as it would be the implementation of a mathematical calculation.
+% During the first coaching, we were advised to focus on the business rules and not the calculations.
+% The knowledge base could be expanded to include the calculation, but it was not necessary for the scope of this project.
+
+% Rule 38: It is obligatory for the Insurer to provide Coverage for a Claim if and only if the Deductible is Satisfied.
 % See Rule 13.
 
+% RUle 39: A Per-Claim Deductible is Satisfied if the Claim is for a higher amount than the Per-Claim Deductible.  
+% Rule 40: An Aggregate Deductible is Satisfied if the sum of the amounts of all Claims on the Policy is for a higher amount than the Aggregate Deductible.  
+% Rule 41: A Deductible is Satisfied if and only if the Per-Claim Deductible and the Aggregate Deductible are Satisfied.  
+% These rules relate to the difference between aggregate deductible and per-claim deductible.
+% As mentioned above, they were not implimented here as it would be the implementation of a mathematical calculation.
+
+% Rule 42: It is necessary for an Insured to file one or more Claims. 
+% This is represented as a fact of the loss. Unfiled claims are not represented in the knowledge base.
+
 % Rule 43: It is possible for a Claim to be covered by Coverage of one or more Policies.
-% coverage_claim(ClaimId, PolicyId) :- claim(ClaimId), policy(PolicyId).
 % Rule 1.1 already covers this use case.
+% Of interest in an extension of this knowledge base would be to add a rule that checks if the claim is covered by more than one policy.
+% To do this would require to create knowledge of policies other than those to which Acme is a party.
+% In cases where different insurance policies cover the same loss, the insurance companies for each policy may dispute how the coverage is split.
 
 % Rule 44: It is necessary for a Loss to present as an event.
 % This is represented as a fact of the loss, which has a cause and effects.
