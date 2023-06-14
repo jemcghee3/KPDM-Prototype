@@ -327,16 +327,11 @@ min(A, B, B) :- A >= B.
 % Rule 51: It is possible for the Expert to be an Adjuster, an Accountant, an Engineer, or Coverage Counsel. 
 % Rules related to experts are represented as facts of the loss.
 
-
-
 % 52: It is possible for a Claim to be Technically Complex.
-
-
+% This could be considered for an extension of the knowledge base.
 
 % 53: It is necessary that a CAR Policy is less likely to be Technically Complex than an IAR Policy.
 % This would be its own knowledge intensive process, and is not represented in the knowledge base.
-
-
 
 % Rule 54: It is obligatory that a Claim is Technically Complex if the Insured will not repair or replace the Loss.
 % Rule 55: It is obligatory that the claim is Technically Complex if the Cause of the Loss is Unknown.
@@ -346,8 +341,7 @@ min(A, B, B) :- A >= B.
 % Rule 59: It is necessary that the Location of a Loss affects whether a Claim is Uncertain.
 % Rule 60: It is obligatory that the Claim is Uncertain if the Location is Political.
 % Rule 61: It is obligatory for the EE Claim to last for the duration of the BI Claim if the Claim is Consequential. 
-
-
+% These rules could be considered for an extension of the knowledge base.
 
 % Rule 62: It is obligatory for an Adjuster to examine a PD Claim.
 % Rule 63: It is obligatory for an Accountant to inspect a Claim if the Claim is Uncertain.
@@ -357,12 +351,9 @@ min(A, B, B) :- A >= B.
 % Rule 67: It is obligatory for Coverage Counsel to assess the Coverage if Cause is subject to one or more Limits or Exclusions.
 % Rules 62-67 were not formalized because the decision to hire an expert would be the output of another knowledge intensive process.
 
-
-
 % Rule 68: It is possible for a Dispute to exist if a Claim is Technically Complex. 
 % Rule 69: It is obligatory for a Dispute to exist if a Claim is Uncertain.
-
-
+% These rules could be considered for an extension of the knowledge base.
 
 % Rule 70: It is possible for a Dispute to exist if Coverage Counsel is employed. 
 % Rule 70 is not formalized because the decision to hire an expert would be the output of another knowledge intensive process. 
@@ -373,7 +364,7 @@ min(A, B, B) :- A >= B.
 
 % Rule 72: It is obligatory for a Dispute to exist if two Policies provide Coverage for the same Loss.
 % Rule 73: It is possible for a Dispute to exist if the Claim is greater than the Limit for the Coverage of Acme’s Slip but less than the Limit of the Policy.
-
+% These rules could be considered for an extension of the knowledge base.
 
 
 % Rule 74: It is possible for a Dispute to exist if the Claim is less than the Deductible for the Coverage of Acme’s Slip but greater than the Deductible of the Policy.
