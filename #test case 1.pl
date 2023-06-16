@@ -125,7 +125,7 @@ expert_type(charlene, engineer).
 
 % Rule 10: It is necessary for a Policy to provide one or more Coverages.
 provides_coverage(PolicyID, pd). % always true
-% Other coverages can be provider for by the policy.
+% Other coverages can be provided for by the policy.
 provides_coverage(PolicyID, ee) :- ee_limit(PolicyID, EELimit).
 provides_coverage(PolicyID, bi) :- ee_limit(PolicyID, EELimit). % if coverage for EE, coverage for BI
 
