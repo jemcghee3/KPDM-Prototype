@@ -16,7 +16,7 @@ estimate_ee_claim(01, 20000000). % estimate of the gross extra expense claim
 business_interruption_duration(01, 24). % duration of the business interruption in months
 covers_loss(10101, 01). % policy 10101 covers loss 01
 examines_claim(sergio, 01). % sergio examines the claim
-other_policies_covering_loss(01, true). % this is not used, but should lead to a dispute if it changes Acme's amount by more than 100,000
+other_policies_covering_loss(01, true). % this is not used, but would be a relevant fact for an extension of the program
 % should be dispute due to size of the claim over 1 million Acme's share
 
 cause_of_loss(02, earthquake).
@@ -83,16 +83,11 @@ bi_deductible(10101, 30). % policy 10101 has a business interruption deductible 
 pd_bi_limit(10101, 250000000). % policy 10101 has a property damage and business interruption limit of 250,000,000
 ee_limit(10101, 25000000). % policy 10101 has an extra expense limit of 25,000,000
 sublimit(10101, war, 0). % policy 10101 has a sublimit for war of 0 (that is, a loss is not covered if it is caused by war)
-% sublimit(PolicyID, unknown, 0). % until the cause is not known, the sublimit is zero.
-% the above is not true. If the cause is not known, it needs to be investigated. A claim may be paid even if the cause cannot be determined because Acme must prove the cause is NOT covered.
-
 
 % slip related facts
 % slip_sublimit(101, bi, 2000000). % slip 101 has a sublimit for business interruption of 2,000,000 (per month)
 slip_sublimit(101, earthquake, 5000000). % slip 101 has a sublimit of 5,000,000 if the cause of the loss is earthquake
 acme_insures_share(101, 0.07). % Acme insures 7% of the risk under slip 101
-% acme_slip_differs(101, true). %this needs to be a rule or removed
-% difference_adverse_impact(101, 01, true). % this needs to be a rule or removed
 
 % expert related facts
 expert(sergio). % sergio is an expert
